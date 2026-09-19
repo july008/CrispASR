@@ -5650,14 +5650,14 @@ bool whisper_vad_detect_speech(struct whisper_vad_context* vctx, const float* sa
         n_chunks += 1; // Add one more chunk for remaining samples.
     }
 
-    CRISPASR_LOG_INFO("%s: detecting speech in %d samples\n", __func__, n_samples);
-    CRISPASR_LOG_INFO("%s: n_chunks: %d\n", __func__, n_chunks);
+    //CRISPASR_LOG_INFO("%s: detecting speech in %d samples\n", __func__, n_samples);
+    //CRISPASR_LOG_INFO("%s: n_chunks: %d\n", __func__, n_chunks);
 
     // Reset LSTM hidden/cell states
     ggml_backend_buffer_clear(vctx->buffer, 0);
 
     vctx->probs.resize(n_chunks);
-    CRISPASR_LOG_INFO("%s: props size: %u\n", __func__, n_chunks);
+    //CRISPASR_LOG_INFO("%s: props size: %u\n", __func__, n_chunks);
 
     // Use pre-allocated window buffer to avoid per-call heap allocation
     // that fragments memory across repeated server requests (#132).
@@ -5712,7 +5712,7 @@ bool whisper_vad_detect_speech(struct whisper_vad_context* vctx, const float* sa
         const int chunk_len = idx_end - idx_start;
 
         if (chunk_len < vctx->n_window) {
-            CRISPASR_LOG_INFO("%s: chunk_len: %d < n_window: %d\n", __func__, chunk_len, vctx->n_window);
+           // CRISPASR_LOG_INFO("%s: chunk_len: %d < n_window: %d\n", __func__, chunk_len, vctx->n_window);
             // Zero-pad the last partial chunk directly into window.
             std::copy(samples + idx_start, samples + idx_end, window.begin());
             std::fill(window.begin() + chunk_len, window.end(), 0.0f);
@@ -5738,7 +5738,7 @@ bool whisper_vad_detect_speech(struct whisper_vad_context* vctx, const float* sa
 
     const int64_t t_this_vad = ggml_time_us() - t_start_vad_us;
     vctx->t_vad_us = t_this_vad; // per-call only, not accumulated (#132)
-    CRISPASR_LOG_INFO("%s: vad time = %.2f ms processing %d samples\n", __func__, 1e-3f * t_this_vad, n_samples);
+    //CRISPASR_LOG_INFO("%s: vad time = %.2f ms processing %d samples\n", __func__, 1e-3f * t_this_vad, n_samples);
 
     ggml_backend_sched_reset(sched);
 
@@ -5767,7 +5767,7 @@ float* whisper_vad_probs(struct whisper_vad_context* vctx) {
 
 struct whisper_vad_segments* whisper_vad_segments_from_probs(struct whisper_vad_context* vctx,
                                                              whisper_vad_params params) {
-    CRISPASR_LOG_INFO("%s: detecting speech timestamps using %d probabilities\n", __func__, whisper_vad_n_probs(vctx));
+   // CRISPASR_LOG_INFO("%s: detecting speech timestamps using %d probabilities\n", __func__, whisper_vad_n_probs(vctx));
 
     int n_probs = whisper_vad_n_probs(vctx);
     float* probs = whisper_vad_probs(vctx);
@@ -5918,22 +5918,22 @@ struct whisper_vad_segments* whisper_vad_segments_from_probs(struct whisper_vad_
                 merged_count++;
             }
         }
-        CRISPASR_LOG_INFO("%s: Merged %d adjacent segments, now have %d segments\n", __func__, merged_count,
-                          (int)speeches.size());
+       // CRISPASR_LOG_INFO("%s: Merged %d adjacent segments, now have %d segments\n", __func__, merged_count,
+       //                   (int)speeches.size());
     }
 
     // Double-check for minimum speech duration
     for (int i = 0; i < (int)speeches.size(); i++) {
         if (speeches[i].end - speeches[i].start < min_speech_samples) {
-            CRISPASR_LOG_INFO("%s: Removing segment %d (too short: %d samples)\n", __func__, i,
-                              speeches[i].end - speeches[i].start);
+          //  CRISPASR_LOG_INFO("%s: Removing segment %d (too short: %d samples)\n", __func__, i,
+           //                   speeches[i].end - speeches[i].start);
 
             speeches.erase(speeches.begin() + i);
             i--;
         }
     }
 
-    CRISPASR_LOG_INFO("%s: Final speech segments after filtering: %d\n", __func__, (int)speeches.size());
+  //  CRISPASR_LOG_INFO("%s: Final speech segments after filtering: %d\n", __func__, (int)speeches.size());
 
     // Allocate final segments
     std::vector<whisper_vad_segment> segments;
@@ -5981,9 +5981,9 @@ struct whisper_vad_segments* whisper_vad_segments_from_probs(struct whisper_vad_
         segments[i].start = samples_to_cs(speeches[i].start);
         segments[i].end = samples_to_cs(speeches[i].end);
 
-        CRISPASR_LOG_INFO("%s: VAD segment %d: start = %.2f, end = %.2f (duration: %.2f)\n", __func__, i,
-                          segments[i].start / 100.0, segments[i].end / 100.0,
-                          (segments[i].end - segments[i].start) / 100.0);
+       // CRISPASR_LOG_INFO("%s: VAD segment %d: start = %.2f, end = %.2f (duration: %.2f)\n", __func__, i,
+        //                  segments[i].start / 100.0, segments[i].end / 100.0,
+        //                 (segments[i].end - segments[i].start) / 100.0);
     }
 
     whisper_vad_segments* vad_segments = new whisper_vad_segments;
@@ -5999,7 +5999,7 @@ struct whisper_vad_segments* whisper_vad_segments_from_probs(struct whisper_vad_
 
 struct whisper_vad_segments* whisper_vad_segments_from_samples(whisper_vad_context* vctx, whisper_vad_params params,
                                                                const float* samples, int n_samples) {
-    CRISPASR_LOG_INFO("%s: detecting speech timestamps in %d samples\n", __func__, n_samples);
+//    CRISPASR_LOG_INFO("%s: detecting speech timestamps in %d samples\n", __func__, n_samples);
     if (!whisper_vad_detect_speech(vctx, samples, n_samples)) {
         CRISPASR_LOG_ERROR("%s: failed to detect speech\n", __func__);
         return nullptr;
